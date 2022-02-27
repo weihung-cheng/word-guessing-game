@@ -1,10 +1,11 @@
-export const GAME_TITLE = 'GAME'
+export const GAME_TITLE = 'COATL'
 
 export const WIN_MESSAGES = ['Great Job!', 'Awesome', 'Well done!']
 export const GAME_COPIED_MESSAGE = 'Game copied to clipboard'
 export const ABOUT_GAME_MESSAGE = 'About this game'
 export const NOT_ENOUGH_LETTERS_MESSAGE = 'Not enough letters'
 export const WORD_NOT_FOUND_MESSAGE = 'Word not found'
+export const DUPLICATE_WORD_MESSAGE = 'Word already used'
 export const CORRECT_WORD_MESSAGE = (solution: string) =>
   `The word was ${solution}`
 export const ENTER_TEXT = 'Enter'

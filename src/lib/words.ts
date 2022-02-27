@@ -1,6 +1,8 @@
 import { WORDS } from '../constants/wordlist'
 import { VALIDGUESSES } from '../constants/validGuesses'
 
+const guessedWords: string[] = []
+
 export const isWordInWordList = (word: string) => {
   return (
     WORDS.includes(word.toLowerCase()) ||
@@ -8,8 +10,27 @@ export const isWordInWordList = (word: string) => {
   )
 }
 
+export const getGuessedWords = () => {
+  return guessedWords;
+}
+
 export const isWinningWord = (word: string) => {
   return solution === word
+}
+
+export const addGuessedWord = (word: string) => {
+  guessedWords.push(word.toLowerCase())
+  printGuessedWordList()
+}
+
+export const isWordInGuessedWordList = (word: string) => 
+{
+  return(guessedWords.includes(word.toLowerCase()))
+}
+
+export const printGuessedWordList = () => 
+{
+  console.log(guessedWords)
 }
 
 export const getWordOfDay = () => {

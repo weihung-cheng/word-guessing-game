@@ -17,9 +17,17 @@ import {
   ABOUT_GAME_MESSAGE,
   NOT_ENOUGH_LETTERS_MESSAGE,
   WORD_NOT_FOUND_MESSAGE,
+  DUPLICATE_WORD_MESSAGE,
   CORRECT_WORD_MESSAGE,
 } from './constants/strings'
-import { isWordInWordList, isWinningWord, solution } from './lib/words'
+import {
+  isWordInWordList,
+  isWinningWord,
+  solution,
+  isWordInGuessedWordList,
+  addGuessedWord,
+  printGuessedWordList,
+} from './lib/words'
 import { addStatsForCompletedGame, loadStats } from './lib/stats'
 import {
   loadGameStateFromLocalStorage,
@@ -34,7 +42,6 @@ function App() {
   const prefersDarkMode = window.matchMedia(
     '(prefers-color-scheme: dark)'
   ).matches
-
   const [currentGuess, setCurrentGuess] = useState('')
   const [isGameWon, setIsGameWon] = useState(false)
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false)
@@ -42,6 +49,8 @@ function App() {
   const [isNotEnoughLetters, setIsNotEnoughLetters] = useState(false)
   const [isStatsModalOpen, setIsStatsModalOpen] = useState(false)
   const [isWordNotFoundAlertOpen, setIsWordNotFoundAlertOpen] = useState(false)
+  const [isWordDuplicateAlertOpen, setIsWordDuplicateAlertOpen] =
+    useState(false)
   const [isGameLost, setIsGameLost] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(
     localStorage.getItem('theme')
@@ -61,7 +70,7 @@ function App() {
       setIsGameWon(true)
     }
     if (loaded.guesses.length === 6 && !gameWasWon) {
-      setIsGameLost(true)
+      setIsGameWon(true)
     }
     return loaded.guesses
   })
@@ -130,20 +139,35 @@ function App() {
       }, ALERT_TIME_MS)
     }
 
-    const winningWord = isWinningWord(currentGuess)
+    if (isWordInGuessedWordList(currentGuess)) {
+      setIsWordDuplicateAlertOpen(true)
+      return setTimeout(() => {
+        setIsWordDuplicateAlertOpen(false)
+      }, ALERT_TIME_MS)
+    }
+
+    addGuessedWord(currentGuess)
+
+    console.debug(solution)
+
+    // const winningWord = isWinningWord(currentGuess)
 
     if (currentGuess.length === 5 && guesses.length < 6 && !isGameWon) {
       setGuesses([...guesses, currentGuess])
       setCurrentGuess('')
 
-      if (winningWord) {
-        setStats(addStatsForCompletedGame(stats, guesses.length))
-        return setIsGameWon(true)
-      }
+      /* if (winningWord) {
+        //setStats(addStatsForCompletedGame(stats, guesses.length))
+        //return setIsGameWon(true)
+      } */
 
       if (guesses.length === 5) {
+        // TODO-cknipe: Not entirely sure where this should go but probably somewhere around the stats for completed game
+        // Setup grid representation?
+        //
+
         setStats(addStatsForCompletedGame(stats, guesses.length + 1))
-        setIsGameLost(true)
+        setIsGameWon(true)
       }
     }
   }
@@ -206,6 +230,16 @@ function App() {
         message={WORD_NOT_FOUND_MESSAGE}
         isOpen={isWordNotFoundAlertOpen}
       />
+
+      <Alert
+        message={DUPLICATE_WORD_MESSAGE}
+        isOpen={isWordDuplicateAlertOpen}
+      />
+      <Alert
+        message={DUPLICATE_WORD_MESSAGE}
+        isOpen={isWordDuplicateAlertOpen}
+      />
+
       <Alert message={CORRECT_WORD_MESSAGE(solution)} isOpen={isGameLost} />
       <Alert
         message={successAlert}
