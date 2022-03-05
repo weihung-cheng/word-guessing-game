@@ -54,8 +54,8 @@ export const runSnalgo = () => {
         for (let coord of getNeighborCoords(headCoord)) {
             if (isValidCoord(coord) && snakeGridMap.get(coord) == 'present') {
                 // If [head - body - head] then do nothing; this coordinate already has a component assignment
+                // otherwise, that's a new snake
                 if (!coordsToComponent.has(coord)) {
-                    // that's a new snake; add a new thing to componentIds                
                     coordsToComponent.set(coord, componentIdCounter);
                     // TODO-cknipe: Eventually remove this
                     if (componentsToCoords.has(componentIdCounter)) {
@@ -71,17 +71,25 @@ export const runSnalgo = () => {
 
     // Ok now actually look for the longest path
     let longestSnakeYet: number[] = [];
-    let thisSnake: number[] = [];
     for (var headCoord of allHeadCoords) {
         for (var neighborCoord of getNeighborCoords(headCoord)) {
             if (isValidCoord(neighborCoord) && snakeGridMap.get(neighborCoord) == 'present') {
+                let thisSnake: number[] = [];
                 thisSnake.push(headCoord);
                 thisSnake.push(neighborCoord); 
 
+                let visitedCoords = new Set<number>();
+                visitedCoords.add(headCoord);
+                visitedCoords.add(neighborCoord);
 
+                let longestSnakeOnThisPath: number[] = getLongestSnake(neighborCoord, thisSnake, visitedCoords, snakeGridMap);
+                if (longestSnakeOnThisPath.length > longestSnakeYet.length) {
+                    longestSnakeYet = longestSnakeOnThisPath
+                }
             }
         }
     }
+    return longestSnakeYet;
 }
 
 
@@ -95,6 +103,36 @@ const getNeighborCoords = (coord: number) => {
             getCoordId(x, y+1)]; // down
 }
 
+// OPT-cknipe: Could copy and modify the gridmap with 
+// new CharStatus-es for "visited" and for "in the snake so far"
+// Expect no variables to change
+const getLongestSnake = (thisCoord: number, 
+    thisSnake: number[], // do we actually need this if we're returning longest?
+    visitedCoords: Set<number>,
+    snakeGridMap:Map<number,CharStatus>) : number[] => {
+    if (!isValidCoord(thisCoord) || snakeGridMap.get(thisCoord) != 'present' || visitedCoords.has(thisCoord)) {
+        return []; // return thisSnake
+    }
+    else {
+        // TODO-cknipe: Check against the graph component size
+        thisSnake.push(thisCoord);
+        visitedCoords.add(thisCoord);
+        let thisSnakeCopy = thisSnake.slice();
+        let visitedCoordsCopy = new Set<number>(visitedCoords);
+        thisSnake.push(thisCoord);
+        let longestSnakeFromAnyNeighbor: number[] = [];
+        for (let neighborCoord of getNeighborCoords(thisCoord)) {
+            // which neighbor has the longest path? Append its path
+            let longestSnakeFromThisNeighbor = getLongestSnake(neighborCoord, thisSnakeCopy, visitedCoordsCopy, snakeGridMap);
+            if (longestSnakeFromThisNeighbor.length > longestSnakeFromAnyNeighbor.length) {
+                longestSnakeFromAnyNeighbor = longestSnakeFromThisNeighbor;
+            }
+        }
+        return longestSnakeFromAnyNeighbor;
+    }
+}
+
+// TODO-cknipe: Make sure components/coords maps get updated
 const findAllCoordsInComponent = (thisCoord:number, thisCommponentId:number, 
                     componentsToCoords:Map<number, number[]>, coordsToComponent:Map<number, number>,
                     snakeGridMap:Map<number,CharStatus>) => {
